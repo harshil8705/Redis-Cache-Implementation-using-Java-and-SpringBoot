@@ -9,9 +9,11 @@ import java.util.List;
 
 public interface EmployeeService {
 
-    EmployeeResponse addNewEmployeeByDepartmentId(Long departmentId, @Valid EmployeeRequest request);
+    EmployeeResponse2 addNewEmployeeByDepartmentId(Long departmentId, @Valid EmployeeRequest request);
 
     List<EmployeeResponse2> getAllEmployees();
+
+    EmployeeResponse2 getEmployeeById(Long employeeId);
 
     EmployeeResponse2 updateEmployeeById(Long employeeId, @Valid EmployeeRequest request);
 

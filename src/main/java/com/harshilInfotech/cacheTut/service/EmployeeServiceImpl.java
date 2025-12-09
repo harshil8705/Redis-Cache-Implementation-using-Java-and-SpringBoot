@@ -9,8 +9,12 @@ import com.harshilInfotech.cacheTut.exception.CustomExceptionHandler;
 import com.harshilInfotech.cacheTut.repository.DepartmentRepository;
 import com.harshilInfotech.cacheTut.repository.EmployeeRepository;
 import com.harshilInfotech.cacheTut.util.EmployeeBuilder;
+import jakarta.annotation.PostConstruct;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -22,10 +26,12 @@ public class EmployeeServiceImpl implements EmployeeService{
     private final EmployeeRepository employeeRepository;
     private final DepartmentRepository departmentRepository;
     private final EmployeeBuilder employeeBuilder;
+    private static final String CACHE_NAME = "employees-v2";
 
     @Override
     @Transactional
-    public EmployeeResponse addNewEmployeeByDepartmentId(Long departmentId, EmployeeRequest request) {
+    @CachePut(cacheNames = CACHE_NAME, key = "#result.employeeId")
+    public EmployeeResponse2 addNewEmployeeByDepartmentId(Long departmentId, EmployeeRequest request) {
 
         Department department = departmentRepository.findById(departmentId)
                 .orElseThrow(() -> new CustomExceptionHandler("No Department found by departmentId: " + departmentId));
@@ -44,7 +50,7 @@ public class EmployeeServiceImpl implements EmployeeService{
 //        departmentRepository.save(department);
         employee = employeeRepository.save(employee);
 
-        return employeeBuilder.buildEmployeeResponse(employee);
+        return employeeBuilder.buildEmployeeResponse2(employee);
 
     }
 
@@ -56,12 +62,24 @@ public class EmployeeServiceImpl implements EmployeeService{
             throw new CustomExceptionHandler("No Employees found");
         }
 
-        return employees.stream().map(e -> employeeBuilder.buildEmployeeResponse2(e)).toList();
+        return employees.stream().map(employeeBuilder::buildEmployeeResponse2).toList();
+
+    }
+
+    @Override
+    @Cacheable(cacheNames = CACHE_NAME, key = "#employeeId")
+    public EmployeeResponse2 getEmployeeById(Long employeeId) {
+
+        Employee employee = employeeRepository.findById(employeeId)
+                .orElseThrow(() -> new CustomExceptionHandler("No Employee found by employeeId: " + employeeId));
+
+        return employeeBuilder.buildEmployeeResponse2(employee);
 
     }
 
     @Override
     @Transactional
+    @CachePut(cacheNames = CACHE_NAME, key = "#employeeId")
     public EmployeeResponse2 updateEmployeeById(Long employeeId, EmployeeRequest request) {
 
         Employee employee = employeeRepository.findById(employeeId)
@@ -79,6 +97,7 @@ public class EmployeeServiceImpl implements EmployeeService{
     }
 
     @Override
+    @CacheEvict(cacheNames = CACHE_NAME, key = "#employeeId")
     public String deleteEmployeeById(Long employeeId) {
 
         Employee employee = employeeRepository.findById(employeeId)
@@ -96,6 +115,7 @@ public class EmployeeServiceImpl implements EmployeeService{
 
     @Override
     @Transactional
+//    @CachePut(cacheNames = CACHE_NAME, key = "{#employeeId, #departmentId}")
     public EmployeeResponse changeEmployeeDepartment(Long employeeId, Long departmentId) {
 
         Employee employee = employeeRepository.findById(employeeId)

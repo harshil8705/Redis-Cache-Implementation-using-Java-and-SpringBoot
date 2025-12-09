@@ -20,7 +20,7 @@ public class EmployeeController {
     private final EmployeeServiceImpl employeeService;
 
     @PostMapping("/{departmentId}")
-    public ResponseEntity<EmployeeResponse> addNewEmployeeByDepartmentId(
+    public ResponseEntity<EmployeeResponse2> addNewEmployeeByDepartmentId(
             @PathVariable Long departmentId,
             @RequestBody @Valid EmployeeRequest request
     ) {
@@ -33,6 +33,13 @@ public class EmployeeController {
     public ResponseEntity<List<EmployeeResponse2>> getAllEmployees() {
 
         return new ResponseEntity<>(employeeService.getAllEmployees(), HttpStatus.OK);
+
+    }
+
+    @GetMapping("/{employeeId}")
+    public ResponseEntity<EmployeeResponse2> getEmployeeById(@PathVariable Long employeeId) {
+
+        return new ResponseEntity<>(employeeService.getEmployeeById(employeeId), HttpStatus.OK);
 
     }
 
